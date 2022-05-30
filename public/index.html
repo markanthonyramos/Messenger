@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document</title>
+	<style>
+		* {
+			padding: 0;
+			margin: 0;
+			box-sizing: border-box;
+		}
+		body {
+			background-color: #eee;
+		}
+		main {
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			width: 80%;
+			background-color: white;
+			padding: 10px;
+			border-radius: 5px;
+			display: flex;
+			height: 80vh;
+		}
+		#users {
+			width: 20%;
+			margin-right: 5px;
+			overflow-y: scroll;
+			height: 100%;
+		}
+		#users li {
+			list-style-type: none;
+			padding: 10px;
+			border-radius: 3px;
+			margin-bottom: 5px;
+			margin-right: 5px;
+			font-size: 18px;
+			background-color: #eee;
+		}
+		#users li:last-child {
+			margin-bottom: 0;
+		}
+		#messages-chat-wrapper {
+			width: 80%;
+		}
+		#messages {
+			margin-bottom: 10px;
+			height: 90%;
+			overflow-y: scroll;
+		}
+		#messages li {
+			list-style-type: none;
+			background-color: #eee;
+			padding: 10px;
+			border-radius: 3px;
+			margin-bottom: 5px;
+			margin-right: 5px;
+		}
+		#messages li:last-child {
+			margin-bottom: 0;
+		}
+		#chat-form input {
+			width: 92%;
+			padding: 10px;
+			outline: none;
+		}
+		#chat-form button {
+			padding: 9px;
+			cursor: pointer;
+			font-weight: bold;
+			background-color: #0275d8;
+			border-color: #0275d8;
+			color: white;
+			font-size: 16px;
+			border-radius: 5px;
+		}
+	</style>
+</head>
+<body>
+	<main>
+		<ul id="users"></ul>
+		<div id="messages-chat-wrapper">
+			<ul id="messages"></ul>
+			<form id="chat-form">
+				<input id="chat-input" placeholder="Send a message here..." name="message" />
+				<button type="submit">Send</button>
+			</form>
+		</div>
+	</main>
+	<script src="/socket.io/socket.io.js"></script>
+	<script>
+		const user = prompt("Type your username below.");
+		
+		if (user) {
+			const socket = io();
+
+			const users = document.getElementById("users");
+			const messages = document.getElementById("messages");
+			const chatForm = document.getElementById("chat-form");
+			const chatInput = document.getElementById("chat-input");
+
+			socket.emit("user", user);
+
+			socket.on("user", (user) => {
+				const item = document.createElement("li");
+				item.textContent = user;
+				users.appendChild(item);
+			});
+
+			socket.on("user connected", (user) => {
+				const item = document.createElement("li");
+				item.textContent = `${user} joined the room.`;
+				messages.appendChild(item);
+				messages.scrollTo(0, messages.offsetHeight);
+			});
+
+			chatForm.addEventListener("submit", (e) => {
+				e.preventDefault();
+
+				if (chatInput.value) {
+					socket.emit("chat message", chatInput.value);
+					chatInput.value = "";
+				}
+			});
+
+			socket.on("chat message", (msg) => {
+				const item = document.createElement("li");
+				item.textContent = msg;
+				messages.appendChild(item);
+				messages.scrollTo(0, messages.offsetHeight);
+			});
+		} else {
+			location.reload();
+		}
+	</script>
+</body>
+</html>
